@@ -4,6 +4,10 @@ const SCREENS = {
   SPLASH: "splash",
   SIGNUP: "signup",
   PET_PROFILE: "pet_profile",
+  DASHBOARD: "dashboard",
+  ADD_PET: "add_pet",
+  HANDBOOK: "handbook",
+  ACCOUNT: "account",
   HOME: "home",
   SITTER_DETAIL: "sitter_detail",
   BOOKING: "booking",
@@ -102,6 +106,11 @@ const PULSE_EVENTS = [
   { time: "2:00 PM", type: "feed", text: "Afternoon snack — chicken treats as scheduled in the handbook", emoji: "🍗" },
   { time: "3:30 PM", type: "walk", text: "Evening walk — explored Hiranandani Gardens area", emoji: "🌳", hasGps: true, distance: "1.8 km", duration: "28 min" },
   { time: "5:00 PM", type: "update", text: "All good here! Taco is happy, healthy, and well-fed. See you tomorrow! 🐾", emoji: "💜" },
+];
+
+const MOCK_PAST_BOOKINGS = [
+  { id: 1, sitter: "Priya Menon", photo: "🧑‍⚕️", dates: "Jan 28 — Jan 31", nights: 3, rating: 5, pet: "Taco" },
+  { id: 2, sitter: "Sneha Iyer", photo: "👩", dates: "Dec 12 — Dec 13", nights: 1, rating: 5, pet: "Taco" },
 ];
 
 // --- Utility Components ---
@@ -573,7 +582,7 @@ function PetProfileScreen({ onNext, onBack }) {
           )}
         </Card>
 
-        <Button onClick={onNext} disabled={!petName || flightRisk === null}>
+        <Button onClick={() => onNext({ name: petName, species, breed, age, weight, temperament, flightRisk, id: Date.now() })} disabled={!petName || flightRisk === null}>
           Save Pet Profile →
         </Button>
       </div>
@@ -597,9 +606,16 @@ function HomeScreen({ onSelectSitter, onBack }) {
         borderRadius: "0 0 28px 28px",
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div>
-            <p style={{ margin: 0, color: T.purpleGlow, fontSize: 12, fontWeight: 600 }}>Welcome back 👋</p>
-            <h2 style={{ margin: "2px 0 0", color: "#fff", fontSize: 22, fontWeight: 800 }}>Find a Sitter</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button onClick={onBack} style={{
+              width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.15)",
+              border: "none", cursor: "pointer", color: "#fff", fontSize: 18,
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            }}>←</button>
+            <div>
+              <p style={{ margin: 0, color: T.purpleGlow, fontSize: 12, fontWeight: 600 }}>Welcome back 👋</p>
+              <h2 style={{ margin: "2px 0 0", color: "#fff", fontSize: 22, fontWeight: 800 }}>Find a Sitter</h2>
+            </div>
           </div>
           <div style={{
             width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.15)",
@@ -1334,12 +1350,299 @@ function RatingScreen({ sitter, onFinish }) {
   );
 }
 
+// --- Dashboard Screen ---
+function DashboardScreen({ user, pets, activeBooking, onFindSitter, onAddPet, onViewPulse, onViewHandbook, onAccount }) {
+  return (
+    <PhoneFrame>
+      <div style={{
+        padding: "52px 20px 24px",
+        background: `linear-gradient(145deg, ${T.purpleDark}, ${T.purple})`,
+        borderRadius: "0 0 32px 32px",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+          <div>
+            <p style={{ margin: 0, color: T.purpleGlow, fontSize: 13, fontWeight: 600 }}>Good morning 🌞</p>
+            <h2 style={{ margin: "4px 0 0", color: "#fff", fontSize: 26, fontWeight: 900 }}>Hi, {user.name}! 👋</h2>
+          </div>
+          <button onClick={onAccount} style={{
+            width: 46, height: 46, borderRadius: "50%", background: "rgba(255,255,255,0.15)",
+            border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
+          }}>👤</button>
+        </div>
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 6,
+          padding: "6px 14px", borderRadius: 20, background: "rgba(255,255,255,0.12)",
+        }}>
+          <span style={{ fontSize: 13 }}>{user.city === "Mumbai" ? "🏙️" : "🌳"}</span>
+          <span style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, fontWeight: 600 }}>{user.city}</span>
+        </div>
+      </div>
+
+      <div style={{ padding: "20px 20px 100px" }}>
+        {/* Active Stay Banner */}
+        {activeBooking && (
+          <div onClick={onViewPulse} style={{
+            marginBottom: 20, cursor: "pointer",
+            background: `linear-gradient(135deg, ${T.purple}, ${T.purpleLight})`,
+            borderRadius: 20, padding: 18,
+            boxShadow: `0 4px 20px ${T.purpleGlow}`,
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.2)",
+                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
+                }}>🟢</div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: "#fff" }}>Active Stay · Day 2 of 3</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", marginTop: 2 }}>
+                    {pets[0]?.name || "Taco"} is with {activeBooking.sitter.name.split(" ")[0]} · Mar 15–18
+                  </div>
+                </div>
+              </div>
+              <span style={{ color: "#fff", fontSize: 18 }}>→</span>
+            </div>
+          </div>
+        )}
+
+        {/* Your Fur Babies */}
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800, color: T.text }}>Your Fur Babies</h3>
+          <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4, marginRight: -20, paddingRight: 20 }}>
+            {pets.map((pet) => (
+              <div key={pet.id} style={{
+                flexShrink: 0, textAlign: "center", minWidth: 90,
+                background: T.card, borderRadius: 20, padding: "16px 12px",
+                border: `2px solid ${T.border}`,
+                boxShadow: "0 2px 12px rgba(108,63,197,0.06)",
+              }}>
+                <div style={{ fontSize: 36, marginBottom: 6 }}>{pet.species === "dog" ? "🐕" : "🐈"}</div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: T.text }}>{pet.name}</div>
+                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{pet.breed || pet.species}</div>
+                {pet.flightRisk && <div style={{ fontSize: 10, color: T.warm, marginTop: 4 }}>⚠️ Flight risk</div>}
+              </div>
+            ))}
+            <div onClick={onAddPet} style={{
+              flexShrink: 0, minWidth: 80, textAlign: "center", cursor: "pointer",
+              background: T.purpleFaint, borderRadius: 20, padding: "16px 12px",
+              border: `2px dashed ${T.purpleGlow}`,
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            }}>
+              <div style={{ fontSize: 28, color: T.purple, marginBottom: 6, lineHeight: 1 }}>+</div>
+              <div style={{ fontWeight: 700, fontSize: 12, color: T.purple }}>Add Pet</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800, color: T.text }}>Quick Actions</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {[
+              { icon: "🔍", label: "Find a Sitter", sub: "Browse verified sitters", action: onFindSitter, color: T.purple, bg: T.purpleFaint },
+              { icon: "📋", label: "Pet Handbook", sub: "Care notes & routines", action: onViewHandbook, color: "#2F855A", bg: "#F0FFF4" },
+              { icon: "📅", label: "My Bookings", sub: "View history", action: null, color: "#B8860B", bg: "#FFFBEB" },
+              { icon: "👤", label: "My Account", sub: "Profile & settings", action: onAccount, color: T.textSoft, bg: "#F8F7FA" },
+            ].map(({ icon, label, sub, action, color, bg }) => (
+              <div key={label} onClick={action || undefined} style={{
+                background: bg, borderRadius: 20, padding: 16,
+                cursor: action ? "pointer" : "default",
+                boxShadow: "0 2px 12px rgba(108,63,197,0.05)",
+                border: `1px solid ${T.border}`,
+              }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
+                <div style={{ fontWeight: 800, fontSize: 14, color }}>{label}</div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Past Bookings */}
+        <div>
+          <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800, color: T.text }}>Past Bookings</h3>
+          {MOCK_PAST_BOOKINGS.map((booking) => (
+            <Card key={booking.id} style={{ marginBottom: 10, padding: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 14, background: T.purpleFaint,
+                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24,
+                  }}>{booking.photo}</div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 14 }}>{booking.sitter}</div>
+                    <div style={{ fontSize: 12, color: T.textSoft }}>{booking.dates} · {booking.pet}</div>
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <Badge color="#2F855A" bg="#F0FFF4" style={{ fontSize: 10 }}>✅ Done</Badge>
+                  <div style={{ fontSize: 11, color: T.gold, marginTop: 4 }}>{"⭐".repeat(booking.rating)}</div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </PhoneFrame>
+  );
+}
+
+// --- Handbook Screen ---
+function HandbookScreen({ pets, onBack }) {
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const pet = pets[selectedIdx] || { name: "Taco", species: "dog", breed: "Labrador", age: "2 yrs", weight: "25 kg" };
+
+  const sections = [
+    { emoji: "🍽️", title: "Feeding Routine", items: ["Royal Canin Medium Adult — 1 cup, twice daily", "Warm water mixed in", "No table food — sensitive stomach", "Treats: max 3 chicken strips/day"] },
+    { emoji: "🚶", title: "Walking Preferences", items: ["Morning walk: 7–8 AM, min 30 min", "Evening walk: 5–6 PM, 20 min", "Uses blue retractable leash (in hallway)", "Pulls near other dogs — use gentle redirect"] },
+    { emoji: "🧠", title: "Behavioral Notes", items: ["Anxious during thunderstorms — use ThunderShirt", "Loves belly rubs after meals", "Barks at delivery people — redirect with treat", "Sleeps on the couch, not the bed"] },
+    { emoji: "🏥", title: "Medical Info", items: ["Vaccinations up to date (Mar 2026)", "No known allergies", "Vet: Dr. Sharma, Powai Animal Clinic", "Emergency contact: +91 98765 11111"] },
+  ];
+
+  return (
+    <PhoneFrame>
+      <Header title="Pet Handbook" onBack={onBack} />
+      <div style={{ padding: 20 }}>
+        {pets.length > 1 && (
+          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+            {pets.map((p, i) => (
+              <button key={p.id} onClick={() => setSelectedIdx(i)} style={{
+                flex: 1, padding: 12, borderRadius: 12, cursor: "pointer",
+                border: `2px solid ${selectedIdx === i ? T.purple : T.border}`,
+                background: selectedIdx === i ? T.purpleFaint : "#fff",
+                color: selectedIdx === i ? T.purple : T.textSoft,
+                fontWeight: 700, fontSize: 13, fontFamily: "'Nunito', sans-serif", transition: "all 0.2s",
+              }}>
+                {p.species === "dog" ? "🐕" : "🐈"} {p.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <Card style={{ textAlign: "center", marginBottom: 20, background: T.purpleFaint, padding: 24 }}>
+          <div style={{ fontSize: 52, marginBottom: 8 }}>{pet.species === "dog" ? "🐕" : "🐈"}</div>
+          <h3 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 800 }}>{pet.name}'s Care Guide</h3>
+          {(pet.breed || pet.age) && (
+            <p style={{ margin: 0, fontSize: 12, color: T.textSoft }}>
+              {[pet.breed, pet.age, pet.weight].filter(Boolean).join(" · ")}
+            </p>
+          )}
+        </Card>
+
+        {sections.map(({ emoji, title, items }) => (
+          <Card key={title} style={{ marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 22 }}>{emoji}</span>
+              <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>{title}</h4>
+            </div>
+            {items.map((item, i) => (
+              <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 13, color: T.textSoft, lineHeight: 1.5 }}>
+                <span style={{ color: T.purpleLight, flexShrink: 0 }}>•</span>
+                {item}
+              </div>
+            ))}
+          </Card>
+        ))}
+
+        <Card style={{ background: "#FFF5F0", border: `2px solid #FFD4BC`, marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <span style={{ fontSize: 18 }}>🚨</span>
+            <span style={{ fontWeight: 800, fontSize: 14, color: T.warmDark }}>Emergency Protocol</span>
+          </div>
+          <p style={{ margin: 0, fontSize: 13, color: T.text, lineHeight: 1.6 }}>
+            In an emergency, contact the vet immediately and alert the parent. TacoStay 24/7 support: <strong>1800-TACOSTAY</strong>
+          </p>
+        </Card>
+      </div>
+    </PhoneFrame>
+  );
+}
+
+// --- Account Screen ---
+function AccountScreen({ user, pets, onBack, onAddPet }) {
+  const menuItems = [
+    { icon: "🔔", label: "Notifications", sub: "Stay updates & alerts" },
+    { icon: "💳", label: "Payment Methods", sub: "UPI, cards & wallets" },
+    { icon: "🔒", label: "Privacy & Security", sub: "Data & account settings" },
+    { icon: "💬", label: "Help & Support", sub: "Chat with our team" },
+    { icon: "⭐", label: "Rate TacoStay", sub: "Tell us what you think" },
+  ];
+
+  return (
+    <PhoneFrame>
+      <Header title="My Account" onBack={onBack} />
+      <div style={{ padding: 20 }}>
+        <Card style={{ textAlign: "center", marginBottom: 20, padding: 28 }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: "50%",
+            background: `linear-gradient(135deg, ${T.purple}, ${T.purpleLight})`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 32, margin: "0 auto 12px",
+          }}>👤</div>
+          <h3 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 800 }}>{user.name}</h3>
+          <p style={{ margin: "0 0 12px", color: T.textSoft, fontSize: 13 }}>{user.phone} · {user.city}</p>
+          <Badge>{user.city === "Mumbai" ? "🏙️" : "🌳"} {user.city} Member</Badge>
+        </Card>
+
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800 }}>My Pets</h4>
+            <button onClick={onAddPet} style={{ background: "none", border: "none", color: T.purple, fontWeight: 700, cursor: "pointer", fontSize: 13, fontFamily: "'Nunito', sans-serif" }}>
+              + Add Pet
+            </button>
+          </div>
+          {pets.map((pet) => (
+            <Card key={pet.id} style={{ marginBottom: 10, padding: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ fontSize: 32 }}>{pet.species === "dog" ? "🐕" : "🐈"}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 800, fontSize: 15 }}>{pet.name}</div>
+                  <div style={{ fontSize: 12, color: T.textSoft }}>
+                    {[pet.breed, pet.age, pet.weight].filter(Boolean).join(" · ")}
+                  </div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
+                    {pet.temperament} · {pet.flightRisk ? "⚠️ Flight risk" : "✅ Stays put"}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+          {pets.length === 0 && (
+            <p style={{ color: T.textMuted, fontSize: 13, textAlign: "center" }}>No pets added yet</p>
+          )}
+        </div>
+
+        {menuItems.map(({ icon, label, sub }) => (
+          <Card key={label} style={{ marginBottom: 10, padding: 14, cursor: "pointer" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ fontSize: 22 }}>{icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: T.text }}>{label}</div>
+                <div style={{ fontSize: 12, color: T.textSoft }}>{sub}</div>
+              </div>
+              <span style={{ color: T.textMuted, fontSize: 18, fontWeight: 300 }}>›</span>
+            </div>
+          </Card>
+        ))}
+
+        <p style={{ textAlign: "center", color: T.textMuted, fontSize: 12, marginTop: 24, marginBottom: 8 }}>
+          TacoStay v1.0 POC · Made with 💜 in India
+        </p>
+      </div>
+    </PhoneFrame>
+  );
+}
+
 // --- Main App ---
 export default function TacoStayApp() {
   const [screen, setScreen] = useState(SCREENS.SPLASH);
   const [selectedSitter, setSelectedSitter] = useState(null);
+  const [pets, setPets] = useState([]);
+  const [activeBooking, setActiveBooking] = useState(null);
+  const user = { name: "Rohan", city: "Mumbai", phone: "+91 98765 43210" };
 
   const go = (s) => setScreen(s);
+  const addPet = (pet) => setPets((prev) => [...prev, pet]);
 
   return (
     <div style={{ background: "#1E1633", minHeight: "100vh" }}>
@@ -1358,12 +1661,33 @@ export default function TacoStayApp() {
         <SignupScreen onNext={() => go(SCREENS.PET_PROFILE)} onBack={() => go(SCREENS.SPLASH)} />
       )}
       {screen === SCREENS.PET_PROFILE && (
-        <PetProfileScreen onNext={() => go(SCREENS.HOME)} onBack={() => go(SCREENS.SIGNUP)} />
+        <PetProfileScreen onNext={(pet) => { addPet(pet); go(SCREENS.DASHBOARD); }} onBack={() => go(SCREENS.SIGNUP)} />
+      )}
+      {screen === SCREENS.ADD_PET && (
+        <PetProfileScreen onNext={(pet) => { addPet(pet); go(SCREENS.DASHBOARD); }} onBack={() => go(SCREENS.DASHBOARD)} />
+      )}
+      {screen === SCREENS.DASHBOARD && (
+        <DashboardScreen
+          user={user}
+          pets={pets}
+          activeBooking={activeBooking}
+          onFindSitter={() => go(SCREENS.HOME)}
+          onAddPet={() => go(SCREENS.ADD_PET)}
+          onViewPulse={() => go(SCREENS.PULSE)}
+          onViewHandbook={() => go(SCREENS.HANDBOOK)}
+          onAccount={() => go(SCREENS.ACCOUNT)}
+        />
+      )}
+      {screen === SCREENS.HANDBOOK && (
+        <HandbookScreen pets={pets} onBack={() => go(SCREENS.DASHBOARD)} />
+      )}
+      {screen === SCREENS.ACCOUNT && (
+        <AccountScreen user={user} pets={pets} onBack={() => go(SCREENS.DASHBOARD)} onAddPet={() => go(SCREENS.ADD_PET)} />
       )}
       {screen === SCREENS.HOME && (
         <HomeScreen
           onSelectSitter={(s) => { setSelectedSitter(s); go(SCREENS.SITTER_DETAIL); }}
-          onBack={() => go(SCREENS.PET_PROFILE)}
+          onBack={() => go(SCREENS.DASHBOARD)}
         />
       )}
       {screen === SCREENS.SITTER_DETAIL && selectedSitter && (
@@ -1383,7 +1707,7 @@ export default function TacoStayApp() {
       {screen === SCREENS.BOOKING_CONFIRM && selectedSitter && (
         <BookingConfirmScreen
           sitter={selectedSitter}
-          onNext={() => go(SCREENS.ORIENTATION)}
+          onNext={() => { setActiveBooking({ sitter: selectedSitter }); go(SCREENS.ORIENTATION); }}
         />
       )}
       {screen === SCREENS.ORIENTATION && selectedSitter && (
@@ -1403,7 +1727,7 @@ export default function TacoStayApp() {
       {screen === SCREENS.RATING && selectedSitter && (
         <RatingScreen
           sitter={selectedSitter}
-          onFinish={() => go(SCREENS.HOME)}
+          onFinish={() => { setActiveBooking(null); go(SCREENS.DASHBOARD); }}
         />
       )}
     </div>
