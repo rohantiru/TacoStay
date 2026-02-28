@@ -413,10 +413,10 @@ function SignupScreen({ onNext, onBack }) {
               <div style={{ flex: 1, height: 1, background: T.border }} />
             </div>
 
-            <Button variant="outline" style={{ marginBottom: 10 }}>
+            <Button variant="outline" style={{ marginBottom: 10 }} onClick={onNext}>
               <span>🔵</span> Continue with Google
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={onNext}>
               <span>🔷</span> Continue with Facebook
             </Button>
           </>
